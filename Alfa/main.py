@@ -34,7 +34,7 @@ def executa_codigo_principal():
 
     #Envia email
     email = Email(tarefas)
-    #email.envia_email_sucesso()
+    email.envia_email_sucesso()
 
     for i in range(tarefas):
     
@@ -45,18 +45,18 @@ def executa_codigo_principal():
             notificacao.PreencheDados()
     
             if notificacao.return_bandeira() == "Erro1":
-                api.put_API_true(notificacao.return_item_tarefa())
+                api.tarefa_incompleta(notificacao.return_item_tarefa())
                 bandeira2 += 1
                 continue
             elif notificacao.return_bandeira() == "Erro2":
-                api.put_API_true(notificacao.return_item_tarefa())
+                api.tarefa_erro(notificacao.return_item_tarefa(), notificacao.return_desc_erro())
                 bandeira3 += 1
                 continue
             else:
                 bandeira1 += 1
                 api.altera_status(notificacao.return_id_tarefa())
-                api.put_API_false(notificacao.return_id_tarefa(), notificacao.return_id_elaw())
-        
+                api.tarefa_completa(notificacao.return_id_tarefa(), notificacao.return_id_elaw())
+
         elif r[i]['flow_item']['item']['data']['tipo_de_providencia'] == "Audiência":
             audiencia = TipoAudiencia(i, r, navegador)
             audiencia.ColetaDados()
@@ -64,28 +64,27 @@ def executa_codigo_principal():
             audiencia.PreencheDados()
             
             if audiencia.return_bandeira() == "Erro1":
-                api.put_API_true(audiencia.return_item_tarefa())
+                api.tarefa_incompleta(audiencia.return_item_tarefa())
                 bandeira2 += 1
                 continue
             elif audiencia.return_bandeira() == "Erro2":
-                api.put_API_true(audiencia.return_item_tarefa())
+                api.tarefa_erro(notificacao.return_item_tarefa(), notificacao.return_desc_erro())
                 bandeira3 += 1
                 continue
             elif audiencia.return_bandeira() == "Erro3":
                 print("Tarefa duplicada...")
-                api.put_API_tarefa_duplicada(audiencia.return_id_tarefa(), audiencia.return_id_elaw())
+                api.tarefa_duplicada(audiencia.return_id_tarefa(), audiencia.return_id_elaw())
                 bandeira4 +=1
             else:
                 bandeira1 += 1
                 api.altera_status(audiencia.return_id_tarefa())
-                api.put_API_false(audiencia.return_id_tarefa(), audiencia.return_id_elaw())
-
+                api.tarefa_completa(audiencia.return_id_tarefa(), audiencia.return_id_elaw())
 
 
     print(Fore.GREEN + "\tForam executados {} tarefas com sucesso! Encerrando o navegador.".format(tarefas))
-    #print(Fore.GREEN + "NÃO FECHE ESSA TELA, O ALGORITMO ESTÁ EM ROTINA DE EXECUÇÃO!...")
-    #email.envia_email_fim(bandeira1, bandeira2, bandeira3)
-    #navegador.quit()
+    print(Fore.GREEN + "NÃO FECHE ESSA TELA, O ALGORITMO ESTÁ EM ROTINA DE EXECUÇÃO!...")
+    email.envia_email_fim(bandeira1, bandeira2, bandeira3)
+    navegador.quit()
     
 if __name__ == "__main__":
     

@@ -18,6 +18,9 @@ class AcessaAPI():
             r = requests.post(self.url, data=json.dumps(self.data), headers=self.headers)
             r = r.json()
         except Exception as e:
+            print("Reposta HTTP: ", r.status_code)
+            print("Reposta: ", r.reason)
+            print(r.raise_for_status())
             sys.exit(Fore.RED + "\tHouve algum erro ao fazer a requisição POST da API. Encerrando o algoritmo.")
         
         print(Fore.GREEN + "\tAPI acessada com sucesso!")
@@ -46,6 +49,9 @@ class AcessaAPI():
             r = requests.get(self.url, headers = self.headers, params = self.payload)
             r = r.json()
         except Exception as e:
+            print("Reposta HTTP: ", r.status_code)
+            print("Reposta: ", r.reason)
+            print(r.raise_for_status())
             sys.exit(Fore.RED + "\tHouve algum erro ao fazer a requisição GET da API. Encerrando o algoritmo.")
         
         print(Fore.GREEN + "\tToken coletado e dados do JSON retornados.")
@@ -59,23 +65,22 @@ class AcessaAPI():
             self.headers = {'Content-type': 'application/json', 'Accept': 'text/plain', 'Authorization':self.token, 'enl-token': 'enspace4c4c'}
             
             retorno = requests.post(self.url, headers = self.headers)
-            print("Resposta HTTP: ", retorno.status_code)
-            print(Fore.GREEN + "\tOs dados foram salvos com sucesso!")
-            print("------------------------------------------- ")
-            '''
+            
             if retorno.status_code != 200:
                 print("Resposta HTTP: ", retorno.status_code)
+                print("Resposta: ", retorno.reason)
+                print(retorno.raise_for_status())
                 print(Fore.RED + "\n A API rejeitou o envio dos dados. Favor verificar.")
-                retorno.raise_for_status()
                 return
             else:
+                print("Resposta HTTP: ", retorno.status_code)
                 print("\tStatus da tarefa alterado: Waiting -> Working.")
-            '''
+            
         except requests.exceptions.HTTPError as err:
             print("HTTP Error")
             print(err.args[0])
 
-    def put_API_false(self, id_tarefa, id_elaw):
+    def tarefa_completa(self, id_tarefa, id_elaw):
         print("\nRetornando dados para a API...")
         try:
             #Converte a data de agora para padrão JSON
@@ -93,36 +98,67 @@ class AcessaAPI():
                 }
 
             retorno = requests.put(self.url, data=json.dumps(self.data), headers = self.headers)
-            print("Resposta HTTP: ", retorno.status_code)
-            print(Fore.GREEN + "\tOs dados foram salvos com sucesso!")
-            print("------------------------------------------- ")
-            '''
+
             if retorno.status_code != 200:
+                print(retorno)
                 print("Resposta HTTP: ", retorno.status_code)
-                #sys.exit(Fore.RED + "\n A API rejeitou o envio dos dados. Favor verificar. Encerrando.")
+                print("Resposta: ", retorno.reason)
+                print(retorno.raise_for_status())
                 print(Fore.RED + "\n A API rejeitou o envio dos dados. Favor verificar.")
-                retorno.raise_for_status()
                 return
             else:
+                print("Resposta HTTP: ", retorno.status_code)
                 print(Fore.GREEN + "\tOs dados foram salvos com sucesso!")
                 print("------------------------------------------- ")
-            '''
+            
         except requests.exceptions.HTTPError as err:
             print("HTTP Error")
             print(err.args[0])
         
     
-    def put_API_true(self, referencia):
+    def tarefa_incompleta(self, referencia):
         try:
             self.url = 'https://api.enspace.io/c-items/{}'.format(referencia)
             self.headers = {'Content-type': 'application/json', 'Accept': 'text/plain', 'Authorization':self.token, 'enl-token': 'enspace4c4c'}
-            self.data = {'data':{'cadastro_pelo_robo': 'Não'}}
-            requests.put(self.url, data=json.dumps(self.data), headers = self.headers)
+            self.data = {'data':{'cadastro_pelo_robo': 'Não', 'observacoes':'Não foi encontrado nenhum registro para a tarefa.'}}
+                        
+                        
+            retorno = requests.put(self.url, data=json.dumps(self.data), headers = self.headers)
+            if retorno.status_code != 200:
+                print(retorno)
+                print("Resposta HTTP: ", retorno.status_code)
+                print("Resposta: ", retorno.reason)
+                print(retorno.raise_for_status())
+                print(Fore.RED + "\n A API rejeitou o envio dos dados. Favor verificar.")
+                return
+            else:
+                print("Resposta HTTP: ", retorno.status_code)
+
+        except Exception as e:
+            sys.exit(Fore.RED + "\tHouve algum erro na requisição PUT da API. Favor verificar!")
+        
+    def tarefa_erro(self, referencia, desc_erro):
+        try:
+            self.url = 'https://api.enspace.io/c-items/{}'.format(referencia)
+            self.headers = {'Content-type': 'application/json', 'Accept': 'text/plain', 'Authorization':self.token, 'enl-token': 'enspace4c4c'}
+            self.data = {'data':{'cadastro_pelo_robo': 'Não', 'observacoes': desc_erro}}
+                      
+            retorno = requests.put(self.url, data=json.dumps(self.data), headers = self.headers)
+            
+            if retorno.status_code != 200:
+                print(retorno)
+                print("Resposta HTTP: ", retorno.status_code)
+                print("Resposta: ", retorno.reason)
+                print(retorno.raise_for_status())
+                print(Fore.RED + "\n A API rejeitou o envio dos dados. Favor verificar.")
+                return
+            else:
+                print("Resposta HTTP: ", retorno.status_code)
 
         except Exception as e:
             sys.exit(Fore.RED + "\tHouve algum erro na requisição PUT da API. Favor verificar!")
             
-    def put_API_tarefa_duplicada(self, id_tarefa, id_elaw):
+    def tarefa_duplicada(self, id_tarefa, id_elaw):
         print("\nTarefa duplicada...retornando dados para a API.")
         try:
             #Converte a data de agora para padrão JSON
@@ -145,5 +181,7 @@ class AcessaAPI():
             print(Fore.GREEN + "\tOs dados foram salvos com sucesso!")
             print("------------------------------------------- ")
         except requests.exceptions.HTTPError as err:
+            print(retorno)
             print("HTTP Error")
             print(err.args[0])
+        

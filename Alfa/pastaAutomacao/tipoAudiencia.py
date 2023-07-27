@@ -10,6 +10,7 @@ class TipoAudiencia():
         self.bandeira = ""
         self.id_elaw = ""
         self.item = ""
+        self.desc_erro = ""
     
     def return_bandeira(self):
         return self.bandeira
@@ -23,7 +24,11 @@ class TipoAudiencia():
     def return_item_tarefa(self):
         return self.item
     
+    def return_desc_erro(self):
+        return self.desc_erro
+    
     def voltaPaginaInicial(self):
+        self.navegador.refresh()
         wait(self.navegador, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="j_id_2d_1"]/ul/li[2]/a'))).click()       
         wait(self.navegador, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="menu-form-contencioso:j_id_2d_a_4"]/a'))).click()
         wait(self.navegador, 10).until(EC.element_to_be_clickable((By.ID, 'tabSearchTab:txtSearch'))).clear()
@@ -55,7 +60,7 @@ class TipoAudiencia():
                 'Ouvidoria PROCON': 'Carolina Aguiar Franco Da Veiga',
                 'Pimentel Advogados': 'Daniel Cunha Canto Marques',
                 'Trench Rossi Watanabe': 'Marcelo Alves de Siqueira',
-                'Rangel e Simões':'Mariana Del Monaco',
+                'Rangel e Simões':'Mariana Del Monaco'
             }
             
             time.sleep(2)
@@ -65,17 +70,12 @@ class TipoAudiencia():
                     if escritorio == nome.text:
                         advogado = escritorio_advogado[escritorio]
                         break
-            
-            if advogado == "":
-                print(Fore.RED + "Não foi encontrado nenhum advogado. Indo para o próximo...")
-                self.voltaPaginaInicial()
-                return
-        
+          
         except:
             print(Fore.RED + "Não foi encontrado o advogado para o escritório: ", nome.text)
-            time.sleep(2)
-            self.voltaPaginaInicial()
             self.bandeira = "Erro2"
+            self.desc_erro = "Campo do escritório do advogado vazio."
+            self.voltaPaginaInicial()
             return
         
         try:
@@ -115,15 +115,11 @@ class TipoAudiencia():
         
         except:
             print(Fore.RED + "Botão de trocar advogado não encontrado. Indo para o próximo.")
-            time.sleep(2)
-            wait(self.navegador, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="j_id_2d_1"]/ul/li[2]/a'))).click()                        
-            time.sleep(2)
-            self.navegador.find_element(By.XPATH, '//*[@id="menu-form-contencioso:j_id_2d_a_4"]/a').click()
-            time.sleep(2)
-            self.navegador.find_element(By.ID, 'tabSearchTab:txtSearch').clear()
             self.bandeira = "Erro2"
+            self.desc_erro = "Botão de trocar advogado não carregado."
+            self.voltaPaginaInicial()
             return
-
+           
         
     def ColetaDados(self):
         self.item = self.r[self.i]['flow_item']['item']['reference']
@@ -198,6 +194,7 @@ class TipoAudiencia():
                 print("\nO algoritmo encontrou várias correspondências para o ID: ", self.id_tarefa, ".Indo para o próximo.")
                 print("------------------------------------------- ")
                 self.navegador.find_element(By.ID, 'tabSearchTab:txtSearch').clear()
+                self.desc_erro = "O algoritmo encontrou várias correspondências para esse ID."
                 self.bandeira = "Erro2"
                 return
             else:
@@ -217,7 +214,11 @@ class TipoAudiencia():
                 time.sleep(2)
                 self.navegador.find_element(By.ID, 'dtProcessoResults:0:btnProcesso').click()
         except:
-            sys.exit(Fore.RED + "Não foi possível encontrar métricas do algoritmo. Encerrando.")
+            print(Fore.RED + "Não foi possível encontrar métricas do algoritmo.")
+            self.bandeira = "Erro2"
+            self.desc_erro = "O servidos do Elaw não respondeu."
+            self.voltaPaginaInicial()
+            return
         
         #Trata a hora
         try:
@@ -229,12 +230,8 @@ class TipoAudiencia():
         except:
             print(Fore.RED + "Não foi possível converter a hora. Digitada erroneamente: {}".format(input_data))
             self.bandeira = "Erro2"
-            time.sleep(2)
-            wait(self.navegador, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="j_id_2d_1"]/ul/li[2]/a'))).click()                        
-            time.sleep(2)
-            self.navegador.find_element(By.XPATH, '//*[@id="menu-form-contencioso:j_id_2d_a_4"]/a').click()
-            time.sleep(2)
-            self.navegador.find_element(By.ID, 'tabSearchTab:txtSearch').clear()
+            self.desc_erro = "Não foi possível converter a hora: {}.".format(input_data)
+            self.voltaPaginaInicial()
             return
         
         #Verifica duplicidade
@@ -275,6 +272,7 @@ class TipoAudiencia():
                 self.navegador.find_element(By.XPATH, '//*[@id="trocarStatusDialog"]/div[1]/a').click()
         
         #Verifica advogado
+        time.sleep(2)
         linhas = self.navegador.find_elements(By.XPATH, '//*[@id="tabViewProcesso:j_id_i3_4_1_3_d:dtAgendamentoResults_data"]/tr')
         
         print(linhas[0].text)
@@ -303,6 +301,27 @@ class TipoAudiencia():
             #Insere a hora
             self.navegador.find_element(By.ID, 'j_id_2l:j_id_2p_2_8_8:dataAudienciaField_input').send_keys(hora_br)
             
+            '''
+            if id_select_name[index] == "Oitiva de Testemunha":
+                #Insere o advogado
+                mensagem = self.navegador.find_element(By.XPATH, '//*[@id="j_id_2l:j_id_2p_2_8_1h:dtLawyerParticipantesNovaAudienciaResults_data"]/tr/td').text
+                if mensagem != "Nenhum registro encontrado!":
+                    #botao excluir
+                    self.navegador.find_element(By.ID, 'j_id_2l:j_id_2p_2_8_1h:dtLawyerParticipantesNovaAudienciaResults:0:j_id_2p_2_8_1i_m_1_2_i').click()
+            
+                time.sleep(1)
+                self.navegador.find_element(By.ID, 'j_id_2l:j_id_2p_2_8_1h:autoCompleteLawyer_input').send_keys(advogado)
+                
+                time.sleep(3)
+                self.navegador.find_element(By.XPATH, '//*[@id="j_id_2l:j_id_2p_2_8_1h:autoCompleteLawyer_panel"]/ul/li/span').click()
+                
+                time.sleep(1)
+                self.navegador.find_element(By.XPATH, '//*[@id="j_id_2l:j_id_2p_2_8_1h:dtLawyerParticipantesNovaAudienciaResults:comboAdvogadoResponsavelNovaAudiencia"]/div[3]').click()
+                
+                time.sleep(1)
+                self.navegador.find_element(By.ID, 'j_id_2l:j_id_2p_2_8_1h:dtLawyerParticipantesNovaAudienciaResults:comboAdvogadoResponsavelNovaAudiencia_1').click()
+            '''
+            
             #Clica em salvar
             time.sleep(2)
             self.navegador.find_element(By.ID, 'btnSalvarNovaAudiencia').click()
@@ -323,14 +342,11 @@ class TipoAudiencia():
             time.sleep(2)
             self.navegador.find_element(By.ID, 'j_id_p:eFileTipoCombo_32').click()
         except NoSuchElementException:
-            print(Fore.RED + "\tO botão não foi carregado e a página não resopdeu... Indo para o próximo.")
+            print(Fore.RED + "\tO botão não foi carregado e a página não respondeu... Indo para o próximo.")
             print("------------------------------------------- ")
             self.bandeira = "Erro2"
-            wait(self.navegador, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="j_id_2d_1"]/ul/li[2]/a'))).click()                        
-            time.sleep(2)
-            self.navegador.find_element(By.XPATH, '//*[@id="menu-form-contencioso:j_id_2d_a_4"]/a').click()
-            time.sleep(2)
-            self.navegador.find_element(By.ID, 'tabSearchTab:txtSearch').clear()
+            self.desc_erro = "O botão de confirmar demorou muito para carregar."
+            self.voltaPaginaInicial()
             return
         
         #ElementNotInteractableException
@@ -348,18 +364,12 @@ class TipoAudiencia():
                 #self.navegador.find_element('id', 'j_id_p:j_id_r_2_e_2_1_input').send_keys(r"C:\Users\automation\Downloads\{}".format(self.nomes[pos]))
                 self.navegador.find_element(By.ID, 'j_id_p:j_id_r_2_e_2_1_input').send_keys(r"C:\Users\JoséGabrielNevesBuen\Downloads\{}".format(self.nomes[pos]))
         except:
-            time.sleep(10)
             print(Fore.RED + "O servidor não respondeu ao donwload dos dados... Indo para o próximo")
             self.bandeira = "Erro2"
-            #clica em cancelar
-            wait(self.navegador, 10).until(EC.element_to_be_clickable((By.ID, 'j_id_t'))).click()
-            time.sleep(2)
-            wait(self.navegador, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="j_id_2d_1"]/ul/li[2]/a'))).click()                        
-            time.sleep(2)
-            self.navegador.find_element(By.XPATH, '//*[@id="menu-form-contencioso:j_id_2d_a_4"]/a').click()
-            time.sleep(2)
-            self.navegador.find_element(By.ID, 'tabSearchTab:txtSearch').clear()
+            self.desc_erro = "O servidor não respondeu ao donwload dos dados."
+            self.voltaPaginaInicial()
             return
+            
         
         #retorna para a página inicial
         try:
@@ -377,6 +387,8 @@ class TipoAudiencia():
             time.sleep(2)
             self.navegador.find_element(By.ID, 'tabSearchTab:txtSearch').clear()
         except TimeoutException as TME:
-            print(Fore.RED + "O servidor demorou muito para responder. Erro catastrófico. Reiniciando...")
-            self.bandeira = "Erro4"
+            print(Fore.RED + "O servidor demorou muito para responder.")
+            self.bandeira = "Erro2"
+            self.desc_erro = "O servidor demorou muito para responder"
+            self.voltaPaginaInicial()
             return

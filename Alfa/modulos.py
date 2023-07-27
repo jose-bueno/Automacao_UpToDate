@@ -20,5 +20,6 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchFrameException
 from selenium.common.exceptions import TimeoutException
 from colorama import init, Fore

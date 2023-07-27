@@ -10,6 +10,7 @@ class TipoNotificao():
         self.bandeira = ""
         self.id_elaw = ""
         self.item = ""
+        self.desc_erro = ""
     
     def return_bandeira(self):
         return self.bandeira
@@ -23,9 +24,13 @@ class TipoNotificao():
     def return_item_tarefa(self):
         return self.item
     
+    def return_desc_erro(self):
+        return self.desc_erro
+    
     #Serve para ambos
     def voltaPaginaInicial(self):
         self.navegador.refresh()
+        time.sleep(2)
         wait(self.navegador, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="j_id_2d_1"]/ul/li[2]/a'))).click()       
         wait(self.navegador, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="menu-form-contencioso:j_id_2d_a_4"]/a'))).click()
         wait(self.navegador, 10).until(EC.element_to_be_clickable((By.ID, 'tabSearchTab:txtSearch'))).clear()
@@ -57,9 +62,9 @@ class TipoNotificao():
                     'Ouvidoria PROCON': 'Carolina Aguiar Franco Da Veiga',
                     'Pimentel Advogados': 'Daniel Cunha Canto Marques',
                     'Trench Rossi Watanabe': 'Marcelo Alves de Siqueira',
-                    'Rangel e Simões':'Mariana Del Monaco', 
+                    'Rangel e Simões':'Mariana Del Monaco'
                 }
-                
+
             nome_escritorio = self.navegador.find_elements('xpath', '//*[@id="processoDadosCabecalhoForm"]/table/tbody/tr/td/label')
             for escritorio in escritorio_advogado:
                 for nome in nome_escritorio:
@@ -69,54 +74,56 @@ class TipoNotificao():
         except:
             print(Fore.RED + "Não foi encontrado advogado.")
             self.bandeira = "Erro2"
+            self.desc_erro = "Não foi encontrado advogado."
             self.voltaPaginaInicial()
             return
-
-        botao = True
-        while botao:
-            try:
-                time.sleep(1)
-                self.navegador.find_element(By.XPATH, '//*[@id="tabViewProcesso:j_id_i3_4_1_3_d:dtAgendamentoResults:0:j_id_i3_4_1_3_1g"]').click()
-
-                time.sleep(5)
-                self.navegador.switch_to.frame(1)
             
-                total_advogados = self.navegador.find_elements(By.XPATH, '//*[@id="dtLawyerParticipantesProcessoResults_data"]/tr')
+            print('\tAdvogado responsável:', advogado)
+        
+        time.sleep(1)
+        self.navegador.find_element(By.XPATH, '//*[@id="tabViewProcesso:j_id_i3_4_1_3_d:dtAgendamentoResults:0:j_id_i3_4_1_3_1g"]').click()
+        
+        time.sleep(5)
+        try:
+            self.navegador.switch_to.frame(1)
+        except NoSuchFrameException:
+            print(Fore.RED + "Frame advogado demorou muito para carregar.")
+            self.bandeira = "Erro2"
+            self.desc_erro = "Frame advogado demorou muito para carregar."
+            self.voltaPaginaInicial()
+            return
+    
+        total_advogados = self.navegador.find_elements(By.XPATH, '//*[@id="dtLawyerParticipantesProcessoResults_data"]/tr')
 
-                time.sleep(2)
+        time.sleep(2)
 
-                #botao excluir
-                for i in range(len(total_advogados)):
-                    a = 0
-                    #self.navegador.find_element(By.ID, 'dtLawyerParticipantesProcessoResults:{0}:j_id_1b').click()
-                    self.navegador.find_element(By.ID,  'dtLawyerParticipantesProcessoResults:0:j_id_1b').click()
-                    time.sleep(3)
-                    a += 1
-                    if a == 3:
-                        a = 0
-                        time.sleep(1)
-                
+        #botao excluir
+        for i in range(len(total_advogados)):
+            a = 0
+            #self.navegador.find_element(By.ID, 'dtLawyerParticipantesProcessoResults:{0}:j_id_1b').click()
+            self.navegador.find_element(By.ID,  'dtLawyerParticipantesProcessoResults:0:j_id_1b').click()
+            time.sleep(3)
+            a += 1
+            if a == 3:
+                a = 0
                 time.sleep(1)
-                self.navegador.find_element(By.ID, 'dtLawyerParticipantesProcessoResults:autoCompleteLawyer_input').send_keys(advogado)
+        
+        time.sleep(1)
+        self.navegador.find_element(By.ID, 'dtLawyerParticipantesProcessoResults:autoCompleteLawyer_input').send_keys(advogado)
 
-                time.sleep(1)
-                self.navegador.find_element(By.XPATH, '//*[@id="dtLawyerParticipantesProcessoResults:autoCompleteLawyer_panel"]/ul').click()
+        time.sleep(1)
+        self.navegador.find_element(By.XPATH, '//*[@id="dtLawyerParticipantesProcessoResults:autoCompleteLawyer_panel"]/ul').click()
 
-                time.sleep(1)
-                self.navegador.find_element(By.ID, 'comboAdvogadoResponsavelProcesso_label').click()
+        time.sleep(1)
+        self.navegador.find_element(By.ID, 'comboAdvogadoResponsavelProcesso_label').click()
 
-                time.sleep(1)
-                self.navegador.find_element(By.ID, 'comboAdvogadoResponsavelProcesso_1').click()
+        time.sleep(1)
+        self.navegador.find_element(By.ID, 'comboAdvogadoResponsavelProcesso_1').click()
 
-                #Confirma
-                time.sleep(1)
-                self.navegador.find_element(By.ID, 'j_id_t').click()
-                botao = False
-            except:
-                print(Fore.RED + "O elemento não foi encontrado... Tentando novamente")
-                self.navegador.refresh()
-                time.sleep(5)
-
+        #Confirma
+        time.sleep(1)
+        self.navegador.find_element(By.ID, 'j_id_t').click()
+    
     #Serve para ambos
     def ColetaDados(self):
         self.item = self.r[self.i]['flow_item']['item']['reference']
@@ -186,6 +193,7 @@ class TipoNotificao():
                 print("\nO algoritmo encontrou várias correspondências para o ID: ", self.id_tarefa, ".Indo para o próximo.")
                 print("------------------------------------------- ")
                 self.navegador.find_element('id', 'tabSearchTab:txtSearch').clear()
+                self.desc_erro = "O algoritmo encontrou várias correspondências para essa tarefa."
                 self.bandeira = "Erro2"
                 return
             else:
@@ -200,12 +208,18 @@ class TipoNotificao():
                     print("------------------------------------------- ")
                     self.navegador.find_element('id', 'tabSearchTab:txtSearch').clear()
                     self.bandeira = "Erro2"
+                    self.desc_erro = "O número do processo diverge do cadastrado no eLaw."
                     return
                 
                 #Clicar em pesquisar
                 self.navegador.find_element(By.ID, 'dtProcessoResults:0:btnProcesso').click()
         except:
-            sys.exit(Fore.RED + "Não foi possível encontrar métricas do algoritmo. Encerrando.")
+            print(Fore.RED + "Não foi possível encontrar métricas do algoritmo. Encerrando.")
+            self.bandeira = "Erro2"
+            self.desc_erro = "O servidos do Elaw não respondeu."
+            self.voltaPaginaInicial()
+            return
+            
         
         #Verifica status
         status_label = self.navegador.find_elements('xpath', '//*[@id="processoDadosCabecalhoForm"]/table/tbody/tr/td/label')
@@ -220,11 +234,11 @@ class TipoNotificao():
                 time.sleep(1)
                 self.navegador.find_element(By.ID, 'j_id_fk').click()
         
-        time.sleep(5)
         #Verifica advogado
+        time.sleep(3)
         linhas = self.navegador.find_elements(By.XPATH, '//*[@id="tabViewProcesso:j_id_i3_4_1_3_d:dtAgendamentoResults_data"]/tr')
-        time.sleep(2)
         
+        time.sleep(3)
         print(linhas[0].text)
         if not linhas[0].text == "Nenhum registro encontrado!":
             self.trocaAdvogado()
@@ -233,42 +247,61 @@ class TipoNotificao():
         
         #Clica em Acionar Workflow
         time.sleep(2)
+        t = 0
         botao = True
         while botao:
-            try:
-                time.sleep(2)
-                wait(self.navegador, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="btnAcionarWorkflow"]/span[2]'))).click()
+            if not t == 3:
+                try:
+                    time.sleep(2)
+                    wait(self.navegador, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="btnAcionarWorkflow"]/span[2]'))).click()
+
+                    #Alterando para o popup
+                    wait(self.navegador, 10).until(EC.visibility_of_element_located((By.ID, "acionarWorkflowDialog")))
+                    botao = False
+                except:
+                    t += 1
+                    print(Fore.RED + "O botão do modal não foi encontrado. Tentando novamente...")
+                    self.navegador.refresh()
+                    time.sleep(5)
+            else:
+                print(Fore.RED + "O botão do modal não respondeu. Indo para o próximo")
+                self.bandeira = "Erro2"
+                self.desc_erro = "Frame advogado demorou muito para carregar."
+                self.voltaPaginaInicial()
+                botao = False
+                return
                 
-                #Alterando para o popup
-                wait(self.navegador, 10).until(EC.visibility_of_element_located((By.ID, "acionarWorkflowDialog")))
-                botao = False
-            except:
-                print(Fore.RED + "O botão do modal não foi encontrado. Tentando novamente...")
-                self.navegador.refresh()
-                time.sleep(5)
-
-
         #Inserindo informações no popup
+        t = 0
         botao = True
         while botao:
-            try:
-                time.sleep(1)
-                self.navegador.find_element(By.ID, 'j_id_2n_label').click()
-                #wait(self.navegador, 10).until(EC.element_located_to_be_selected((By.ID, 'j_id_2n_label'))).click()
+            if not t == 3:
+                try:
+                    time.sleep(1)
+                    self.navegador.find_element(By.ID, 'j_id_2n_label').click()
+                    #wait(self.navegador, 10).until(EC.element_located_to_be_selected((By.ID, 'j_id_2n_label'))).click()
 
-                time.sleep(1)
-                self.navegador.find_element(By.ID, 'j_id_2n_12').click()
+                    time.sleep(1)
+                    self.navegador.find_element(By.ID, 'j_id_2n_12').click()
 
-                time.sleep(3)
-                self.navegador.find_element(By.ID, 'workflowFaseAcionarWorkflowCombo_label').click()
-                #wait(self.navegador, 10).until(EC.element_located_to_be_selected((By.ID, 'workflowFaseAcionarWorkflowCombo_label'))).click()
+                    time.sleep(3)
+                    self.navegador.find_element(By.ID, 'workflowFaseAcionarWorkflowCombo_label').click()
+                    #wait(self.navegador, 10).until(EC.element_located_to_be_selected((By.ID, 'workflowFaseAcionarWorkflowCombo_label'))).click()
 
-                time.sleep(1)
-                self.navegador.find_element(By.ID, 'workflowFaseAcionarWorkflowCombo_1').click()
-                #wait(self.navegador, 10).until(EC.element_located_to_be_selected((By.ID, 'workflowFaseAcionarWorkflowCombo_1'))).click()
+                    time.sleep(1)
+                    self.navegador.find_element(By.ID, 'workflowFaseAcionarWorkflowCombo_1').click()
+                    #wait(self.navegador, 10).until(EC.element_located_to_be_selected((By.ID, 'workflowFaseAcionarWorkflowCombo_1'))).click()
+                    botao = False
+                except NoSuchElementException:
+                    t += 1
+                    print("Botão não encontrado... Tentando novamente")
+            else:
+                print(Fore.RED + "O botão do modal não respondeu. Indo para o próximo")
+                self.bandeira = "Erro2"
+                self.desc_erro = "Botão de acionar workflow demorou muito para responder."
+                self.voltaPaginaInicial()
                 botao = False
-            except NoSuchElementException:
-                print("Botão não encontrado... Tentando novamente")
+                return
         
         #Espera mais
         try:
@@ -285,11 +318,8 @@ class TipoNotificao():
             #Volta para a tela inicial
             print(Fore.RED + "Não foi carregado o botão. Indo para o próximo")
             self.bandeira = "Erro2"
-            wait(self.navegador, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="j_id_2d_1"]/ul/li[2]/a'))).click()
-            time.sleep(2)
-            wait(self.navegador, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="menu-form-contencioso:j_id_2d_a_4"]/a'))).click()  
-            time.sleep(2)
-            wait(self.navegador, 10).until(EC.element_to_be_clickable((By.ID, 'tabSearchTab:txtSearch'))).clear()
+            self.desc_erro = "Botão de anexar arquivo demorou muito para responder."
+            self.voltaPaginaInicial()
             return
             
         time.sleep(1)
@@ -306,12 +336,9 @@ class TipoNotificao():
                 self.navegador.find_element(By.ID, 'j_id_78_2_1_5_5b_1:j_id_78_2_1_5_5b_3_2_e_2_1_input').send_keys(r"C:\Users\JoséGabrielNevesBuen\Downloads\{}".format(self.nomes[pos]))
         except:
             print(Fore.RED + "O servidor demorou para responder a requisição de download. Indo para a próxima tarefa.")
-            self.bandeira = "Erro1"
-            wait(self.navegador, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="j_id_2d_1"]/ul/li[2]/a'))).click()
-            time.sleep(2)
-            wait(self.navegador, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="menu-form-contencioso:j_id_2d_a_4"]/a'))).click()  
-            time.sleep(2)
-            wait(self.navegador, 10).until(EC.element_to_be_clickable((By.ID, 'tabSearchTab:txtSearch'))).clear()
+            self.bandeira = "Erro2"
+            self.desc_erro = "O servidor demorou para responder a requisição de download."
+            self.voltaPaginaInicial()
             return
 
         #Clica em enviar
@@ -321,29 +348,38 @@ class TipoNotificao():
         except:
             print("Não foi carregado o botão. Indo para o próximo")
             self.bandeira = "Erro2"
-            wait(self.navegador, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="j_id_2d_1"]/ul/li[2]/a'))).click()
-            time.sleep(2)
-            wait(self.navegador, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="menu-form-contencioso:j_id_2d_a_4"]/a'))).click()  
-            time.sleep(2)
-            wait(self.navegador, 10).until(EC.element_to_be_clickable((By.ID, 'tabSearchTab:txtSearch'))).clear()
+            self.desc_erro = "O botão de confirmar demorou muito para responder."
+            self.voltaPaginaInicial()
             return
         
         try:
             #Volta para a tela inicial
             botao = True
             while botao:
-                try:
-                    time.sleep(5)
-                    self.navegador.find_element('xpath', '//*[@id="j_id_2d_1"]/ul/li[2]/a').click()
+                if not t == 5:
+                    try:
+                        time.sleep(1)
+                        self.navegador.find_element('xpath', '//*[@id="j_id_2d_1"]/ul/li[2]/a').click()
+                        botao = False
+                    except:
+                        t += 1
+                else:
+                    time.sleep(3)
+                    print(Fore.RED + "O botão de iniciar demorou muito para carregar")
+                    self.bandeira = "Erro2"
+                    self.desc_erro = "O botão de iniciar demorou muito para carregar."
+                    self.voltaPaginaInicial()
                     botao = False
-                except:
-                    print("Botão não encontrado. Tentando novamente!...")
+                    return
             
-            time.sleep(5)
+            time.sleep(2)
             wait(self.navegador, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="menu-form-contencioso:j_id_2d_a_4"]/a'))).click()
-            time.sleep(5)
+            time.sleep(2)
             wait(self.navegador, 10).until(EC.element_to_be_clickable((By.ID, 'tabSearchTab:txtSearch'))).clear()
         except TimeoutException as TME:
-            print("O servidor demorou muito para responder. Reiniciando...")
-            self.bandeira = "Erro4"
+            print(Fore.RED + "O servidor demorou muito para responder.")
+            self.bandeira = "Erro2"
+            self.desc_erro = "O servidor demorou muito para responder"
+            self.voltaPaginaInicial()
             return
+

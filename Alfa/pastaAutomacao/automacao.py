@@ -4,13 +4,13 @@ service = Service(ChromeDriverManager().install())
 class Automacao():
     def __init__(self):
         self.navegador = ""
-
+    
     def InicializaWebDriver(self):
         try:
             chrome_options = Options()
             chrome_options.add_experimental_option("detach", True)
             self.navegador = webdriver.Chrome(service=service, chrome_options=chrome_options)
-            self.navegador.implicitly_wait(15)
+            self.navegador.implicitly_wait(30)
             self.navegador.get("https://mercadolivre.elaw.com.br/")
             print("Tentando acessar o navegador...")
             #time.sleep(5)
@@ -22,7 +22,6 @@ class Automacao():
     def AcessaElaw(self):
         print("Acessando o eLaw...")
         acesso = True
-        tentativas = 0
         while acesso:
             try:
                 self.navegador.find_element('id', 'username' ).send_keys('ext_roalpha')
@@ -34,13 +33,8 @@ class Automacao():
                 self.navegador.find_element('xpath', '//*[@id="j_id_2d_1"]/ul/li[2]/a').click()
                 acesso = False
             except Exception as e:
-                tentativas += 1
                 print(Fore.RED + "Não foi possível acessar o eLaw. Tentando novamente...")
                 print("------------------------------------------- ")
-                if tentativas == 10:
-                    print(Fore.RED + "Erro ao acessar o eLaw. Encerrando o algoritmo.")
-                    sys.exit()
-                   
         
         print(Fore.GREEN + "\tElaw acessado com sucesso!")
         
@@ -49,6 +43,3 @@ class Automacao():
         
     def RetornaObjeto(self):
         return self.navegador
-
-
-
