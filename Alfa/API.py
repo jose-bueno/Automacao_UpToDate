@@ -20,7 +20,6 @@ class AcessaAPI():
         except Exception as e:
             print("Reposta HTTP: ", r.status_code)
             print("Reposta: ", r.reason)
-            print(r.raise_for_status())
             sys.exit(Fore.RED + "\tHouve algum erro ao fazer a requisição POST da API. Encerrando o algoritmo.")
         
         print(Fore.GREEN + "\tAPI acessada com sucesso!")
@@ -51,7 +50,6 @@ class AcessaAPI():
         except Exception as e:
             print("Reposta HTTP: ", r.status_code)
             print("Reposta: ", r.reason)
-            print(r.raise_for_status())
             sys.exit(Fore.RED + "\tHouve algum erro ao fazer a requisição GET da API. Encerrando o algoritmo.")
         
         print(Fore.GREEN + "\tToken coletado e dados do JSON retornados.")
@@ -69,7 +67,6 @@ class AcessaAPI():
             if retorno.status_code != 200:
                 print("Resposta HTTP: ", retorno.status_code)
                 print("Resposta: ", retorno.reason)
-                print(retorno.raise_for_status())
                 print(Fore.RED + "\n A API rejeitou o envio dos dados. Favor verificar.")
                 return
             else:
@@ -103,7 +100,6 @@ class AcessaAPI():
                 print(retorno)
                 print("Resposta HTTP: ", retorno.status_code)
                 print("Resposta: ", retorno.reason)
-                print(retorno.raise_for_status())
                 print(Fore.RED + "\n A API rejeitou o envio dos dados. Favor verificar.")
                 return
             else:
@@ -128,7 +124,6 @@ class AcessaAPI():
                 print(retorno)
                 print("Resposta HTTP: ", retorno.status_code)
                 print("Resposta: ", retorno.reason)
-                print(retorno.raise_for_status())
                 print(Fore.RED + "\n A API rejeitou o envio dos dados. Favor verificar.")
                 return
             else:
@@ -149,7 +144,6 @@ class AcessaAPI():
                 print(retorno)
                 print("Resposta HTTP: ", retorno.status_code)
                 print("Resposta: ", retorno.reason)
-                print(retorno.raise_for_status())
                 print(Fore.RED + "\n A API rejeitou o envio dos dados. Favor verificar.")
                 return
             else:
@@ -173,13 +167,21 @@ class AcessaAPI():
                 'id_elaw': id_elaw,
                 'demanda_ja_tratada_em_outro_ticket': 'Não',
                 'cadastro_pelo_robo': 'Sim',
-                'observacoes':'Já havia uma audiência cadastrada com o mesmo tipo e a mesma data.'
+                'observcoes':'Já havia uma audiência cadastrada com o mesmo tipo e a mesma data.'
                 }
 
             retorno = requests.put(self.url, data=json.dumps(self.data), headers = self.headers)
-            print("Resposta HTTP: ", retorno.status_code)
-            print(Fore.GREEN + "\tOs dados foram salvos com sucesso!")
-            print("------------------------------------------- ")
+            
+            if retorno.status_code != 200:
+                print(retorno)
+                print("Resposta HTTP: ", retorno.status_code)
+                print("Resposta: ", retorno.reason)
+                print(Fore.RED + "\n A API rejeitou o envio dos dados. Favor verificar.")
+                print("------------------------------------------- ")
+                return
+            else:
+                print(Fore.GREEN + "\tOs dados foram salvos com sucesso!")
+                print("------------------------------------------- ")
         except requests.exceptions.HTTPError as err:
             print(retorno)
             print("HTTP Error")

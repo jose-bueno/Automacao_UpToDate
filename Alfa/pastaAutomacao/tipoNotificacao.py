@@ -29,6 +29,7 @@ class TipoNotificao():
     
     #Serve para ambos
     def voltaPaginaInicial(self):
+        time.sleep(2)
         self.navegador.refresh()
         time.sleep(2)
         wait(self.navegador, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="j_id_2d_1"]/ul/li[2]/a'))).click()       
@@ -82,7 +83,7 @@ class TipoNotificao():
         
         time.sleep(1)
         self.navegador.find_element(By.XPATH, '//*[@id="tabViewProcesso:j_id_i3_4_1_3_d:dtAgendamentoResults:0:j_id_i3_4_1_3_1g"]').click()
-        
+                                               
         time.sleep(5)
         try:
             self.navegador.switch_to.frame(1)
@@ -99,14 +100,19 @@ class TipoNotificao():
 
         #botao excluir
         for i in range(len(total_advogados)):
-            a = 0
-            #self.navegador.find_element(By.ID, 'dtLawyerParticipantesProcessoResults:{0}:j_id_1b').click()
-            self.navegador.find_element(By.ID,  'dtLawyerParticipantesProcessoResults:0:j_id_1b').click()
-            time.sleep(3)
-            a += 1
-            if a == 3:
-                a = 0
-                time.sleep(1)
+            botao = True
+            while botao:
+                try:
+                    a = 0
+                    self.navegador.find_element(By.ID, f'dtLawyerParticipantesProcessoResults:{a}:j_id_1b').click()
+                    a += 1
+                    if a == 3:
+                        a = 0
+                    time.sleep(1)
+                    botao = False
+                except:
+                    time.sleep(3)
+                    self.navegador.find_element(By.ID,  'dtLawyerParticipantesProcessoResults:0:j_id_1b').click()
         
         time.sleep(1)
         self.navegador.find_element(By.ID, 'dtLawyerParticipantesProcessoResults:autoCompleteLawyer_input').send_keys(advogado)
@@ -125,6 +131,45 @@ class TipoNotificao():
         self.navegador.find_element(By.ID, 'j_id_t').click()
     
     #Serve para ambos
+    def verifica_data_citacao(self):
+        time.sleep(2)
+        if self.canal_recebimento != "BPO":
+            print("\nInserindo data de citação...")
+            hoje = date.today().strftime("%d/%m/%Y")
+            try:
+                time.sleep(1)
+                self.navegador.find_element(By.ID, 'btnEditar').click()
+
+                time.sleep(1)
+                total = self.navegador.find_elements(By.XPATH,'//*[@id="processoCadastroForm"]/table/tbody/tr[1]/td/table/tbody/tr/td/table/tbody/tr/td[1]/table/tbody/tr')
+
+                for elemento in total:
+                    elemento.find_element(By.TAG_NAME, 'span')
+                    if elemento.text == "Data de Citação:":
+                        time.sleep(2)
+                        input_value = elemento.find_elements(By.TAG_NAME, 'input')
+                        valor = input_value[0].get_attribute('value')
+                        if valor == "":
+                            input_value[0].click()
+                            time.sleep(1)
+                            input_value[0].send_keys(self.data_recebimento_tratada)
+                            time.sleep(2)
+                            break
+                        else:
+                            break
+
+                time.sleep(1)
+                self.navegador.find_element(By.ID, 'btnSalvarOpen').click()
+
+                time.sleep(2)
+                self.navegador.find_element(By.ID, 'btnSalvarOpen').click()
+                
+
+            except:
+                print("Não foi possível encontrar o elemento Data de Citação.")
+    
+    
+    #Serve para ambos
     def ColetaDados(self):
         self.item = self.r[self.i]['flow_item']['item']['reference']
         self.tipo_providencia = self.r[self.i]['flow_item']['item']['data']['tipo_de_providencia']
@@ -133,6 +178,8 @@ class TipoNotificao():
         self.task = self.r[self.i]['task_name']
         self.tipo_processo = self.r[self.i]['flow_item']['item']['data']['tipo_de_processo']
         self.prazo = self.r[self.i]['flow_item']['item']['data']['prazo_2957']
+        self.canal_recebimento = self.r[self.i]['flow_item']['item']['data']['canal_de_recebimento']
+        self.data_recebimento = self.r[self.i]['flow_item']['item']['data']['data_do_recebimento']
         
         try:
             self.num_reclamacao_procon = self.r[self.i]['flow_item']['item']['data']['numero_da_fa_cip']
@@ -157,6 +204,8 @@ class TipoNotificao():
     def MostraDados(self):
         print("\nReferência do Item: ", self.item)
         print("Tipo de providência: ", self.tipo_providencia)
+        print("Canal de Recebimento:", self.canal_recebimento)
+        print("Data do recebimento: ", self.data_recebimento)
         print("ID da Tarefa: ", self.id_tarefa)
         print('Status da Tarefa: ', self.status_tarefa)
         print('Task: ', self.task)
@@ -181,38 +230,39 @@ class TipoNotificao():
                 self.voltaPaginaInicial()
         
         #Verifica se existe o processo
+        #Verifica se existe casos
         total = self.navegador.find_elements(By.CSS_SELECTOR, 'tr[role = row]')
         try:
             if len(total) <= 1:
                 print("\nNão foi encontrado nenhum registro para o ID: ", self.id_tarefa)
                 print("------------------------------------------- ")
-                self.navegador.find_element('id', 'tabSearchTab:txtSearch').clear()
+                self.navegador.find_element(By.ID, 'tabSearchTab:txtSearch').clear()
                 self.bandeira = "Erro1"
                 return
             elif len(total) > 2:
                 print("\nO algoritmo encontrou várias correspondências para o ID: ", self.id_tarefa, ".Indo para o próximo.")
                 print("------------------------------------------- ")
-                self.navegador.find_element('id', 'tabSearchTab:txtSearch').clear()
-                self.desc_erro = "O algoritmo encontrou várias correspondências para essa tarefa."
+                self.navegador.find_element(By.ID, 'tabSearchTab:txtSearch').clear()
+                self.desc_erro = "O algoritmo encontrou várias correspondências para esse ID."
                 self.bandeira = "Erro2"
                 return
             else:
-                time.sleep(1)
-                #Encontrar o id do Elaw
-                self.id_elaw = self.navegador.find_element(By.XPATH,'//*[@id="dtProcessoResults:0:j_id_1hs:0:j_id_1hw"]/span').text
-                
                 #Verifica se os números são iguais
-                num_processo = self.navegador.find_element(By.XPATH, '//*[@id="dtProcessoResults:0:j_id_1hs:5:j_id_1hw"]/span').text
+                num_processo = self.navegador.find_element(By.XPATH, '//*[@id="dtProcessoResults:0:j_id_1i5:5:j_id_1i9"]/span').text
                 if not num_processo == self.numero:
                     print("Os números de processo não são iguais. Indo para o próximo")
-                    print("------------------------------------------- ")
+                    print('-------------------------------------------')
                     self.navegador.find_element('id', 'tabSearchTab:txtSearch').clear()
                     self.bandeira = "Erro2"
-                    self.desc_erro = "O número do processo diverge do cadastrado no eLaw."
                     return
+                
+                #Encontrar o id do Elaw
+                self.id_elaw = self.navegador.find_element(By.XPATH, '//*[@id="dtProcessoResults:0:j_id_1i5:0:j_id_1i9"]/span').text
+                time.sleep(5)
                 
                 #Clicar em pesquisar
                 self.navegador.find_element(By.ID, 'dtProcessoResults:0:btnProcesso').click()
+                time.sleep(5)
         except:
             print(Fore.RED + "Não foi possível encontrar métricas do algoritmo. Encerrando.")
             self.bandeira = "Erro2"
@@ -220,6 +270,23 @@ class TipoNotificao():
             self.voltaPaginaInicial()
             return
             
+        
+        #Trata da data de recebimento
+        try:
+            input_data = self.data_recebimento
+            input_format = "%Y-%m-%dT%H:%M:%S"
+            output_format = "%d/%m/%Y"
+            dt = datetime.strptime(input_data, input_format)
+            self.data_recebimento_tratada = dt.strftime(output_format)
+            print("Data recebimento tratada: ", self.data_recebimento_tratada)
+            time.sleep(1)
+            
+        except:
+            print(Fore.RED + "Não foi possível converter a hora. Digitada erroneamente: {}".format(input_data))
+            self.bandeira = "Erro2"
+            self.desc_erro = "Não foi possível converter a hora: {}.".format(input_data)
+            self.voltaPaginaInicial()
+            return
         
         #Verifica status
         status_label = self.navegador.find_elements('xpath', '//*[@id="processoDadosCabecalhoForm"]/table/tbody/tr/td/label')
@@ -239,11 +306,9 @@ class TipoNotificao():
         linhas = self.navegador.find_elements(By.XPATH, '//*[@id="tabViewProcesso:j_id_i3_4_1_3_d:dtAgendamentoResults_data"]/tr')
         
         time.sleep(3)
-        print(linhas[0].text)
         if not linhas[0].text == "Nenhum registro encontrado!":
             self.trocaAdvogado()
         
-        #Até aqui serve para ambos
         
         #Clica em Acionar Workflow
         time.sleep(2)
@@ -282,7 +347,7 @@ class TipoNotificao():
                     #wait(self.navegador, 10).until(EC.element_located_to_be_selected((By.ID, 'j_id_2n_label'))).click()
 
                     time.sleep(1)
-                    self.navegador.find_element(By.ID, 'j_id_2n_12').click()
+                    self.navegador.find_element(By.ID, 'j_id_2n_13').click()
 
                     time.sleep(3)
                     self.navegador.find_element(By.ID, 'workflowFaseAcionarWorkflowCombo_label').click()
@@ -342,7 +407,7 @@ class TipoNotificao():
             return
 
         #Clica em enviar
-        time.sleep(2)
+        time.sleep(15)
         try:
             self.navegador.find_element(By.ID, 'btnConfirmaSim').click()
         except:
@@ -352,34 +417,17 @@ class TipoNotificao():
             self.voltaPaginaInicial()
             return
         
-        try:
-            #Volta para a tela inicial
-            botao = True
-            while botao:
-                if not t == 5:
-                    try:
-                        time.sleep(1)
-                        self.navegador.find_element('xpath', '//*[@id="j_id_2d_1"]/ul/li[2]/a').click()
-                        botao = False
-                    except:
-                        t += 1
-                else:
-                    time.sleep(3)
-                    print(Fore.RED + "O botão de iniciar demorou muito para carregar")
-                    self.bandeira = "Erro2"
-                    self.desc_erro = "O botão de iniciar demorou muito para carregar."
-                    self.voltaPaginaInicial()
-                    botao = False
-                    return
-            
-            time.sleep(2)
-            wait(self.navegador, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="menu-form-contencioso:j_id_2d_a_4"]/a'))).click()
-            time.sleep(2)
-            wait(self.navegador, 10).until(EC.element_to_be_clickable((By.ID, 'tabSearchTab:txtSearch'))).clear()
-        except TimeoutException as TME:
-            print(Fore.RED + "O servidor demorou muito para responder.")
-            self.bandeira = "Erro2"
-            self.desc_erro = "O servidor demorou muito para responder"
-            self.voltaPaginaInicial()
-            return
-
+        #Verifica data citação
+        time.sleep(5)
+        self.verifica_data_citacao()
+        
+        #Volta para a tela inicial
+        time.sleep(5)
+        self.voltaPaginaInicial()
+        
+        #except TimeoutException as TME:
+            #print(Fore.RED + "O servidor demorou muito para responder.")
+            #self.bandeira = "Erro2"
+            #self.desc_erro = "O servidor demorou muito para responder ao final do processo."
+            #self.voltaPaginaInicial()
+            #return

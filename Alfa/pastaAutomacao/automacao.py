@@ -1,5 +1,5 @@
 from modulos import *
-service = Service(ChromeDriverManager().install())
+service = Service(ChromeDriverManager(version="114.0.5735.90").install())
 
 class Automacao():
     def __init__(self):

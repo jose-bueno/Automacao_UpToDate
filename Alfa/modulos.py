@@ -6,6 +6,7 @@ import logging
 import schedule
 import time
 import smtplib
+from datetime import date
 import win32com.client as win32
 import warnings
 from email.message import EmailMessage

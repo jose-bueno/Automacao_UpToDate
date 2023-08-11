@@ -68,11 +68,11 @@ def executa_codigo_principal():
                 bandeira2 += 1
                 continue
             elif audiencia.return_bandeira() == "Erro2":
-                api.tarefa_erro(notificacao.return_item_tarefa(), notificacao.return_desc_erro())
+                api.tarefa_erro(audiencia.return_id_tarefa(), audiencia.return_desc_erro())
                 bandeira3 += 1
                 continue
             elif audiencia.return_bandeira() == "Erro3":
-                print("Tarefa duplicada...")
+                api.altera_status(audiencia.return_id_tarefa())
                 api.tarefa_duplicada(audiencia.return_id_tarefa(), audiencia.return_id_elaw())
                 bandeira4 +=1
             else:
